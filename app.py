@@ -31,8 +31,13 @@ df = df[~df['innings_1_team'].isin(old_teams)]
 df = df[~df['innings_2_team'].isin(old_teams)]
 
 # === Streamlit UI ===
-st.set_page_config(page_title="🏏 Cricket Predictor", layout="wide")
-st.title("🏏 Cricket Match Predictor")
+st.set_page_config(page_title="CrickoMeter 🏏", layout="wide")
+
+st.markdown("""
+# 🏏 **CrickoMeter**
+### *Your All-in-One Cricket Match Prediction Engine*
+""")
+
 
 with st.sidebar:
     st.header("🔍 Match Setup")
