@@ -5,7 +5,7 @@ import plotly.express as px
 from datetime import datetime
 
 # === Page Config ===
-st.set_page_config(page_title="CrickoMeter", page_icon="🏏")
+st.set_page_config(page_title="CrickoMeter", page_icon="🏏", layout="wide")
 
 # === Custom CSS ===
 st.markdown("""
@@ -73,26 +73,14 @@ old_teams = ['Pune Warriors', 'Deccan Chargers', 'Gujarat Lions',
 df = df[~df['innings_1_team'].isin(old_teams)]
 df = df[~df['innings_2_team'].isin(old_teams)]
 
-
-# === Streamlit UI ===
-st.set_page_config(page_title="CrickoMeter 🏏", layout="wide")
-
-st.markdown("""
-# 🏏 **CrickoMeter**
-### *Your All-in-One Cricket Match Prediction Engine*
-""")
-
-
-=======
 # === Sidebar Inputs ===
->>>>>>> 5a8371a (Add MLC manual venue for CrickoMeter)
 with st.sidebar:
     st.header("🔍 Match Setup")
 
     match_type = st.selectbox("Match Type", sorted(df["match_type"].dropna().astype(str).unique()))
     df_filtered = df[df["match_type"] == match_type].copy()
 
-    # Inject MLC venue manually if it's not present
+    # Inject MLC venue manually if not present
     if match_type == "MLC":
         mlc_venue = "Central Broward Regional Park Stadium Turf Ground"
         if mlc_venue not in df_filtered["venue"].values:
@@ -101,7 +89,6 @@ with st.sidebar:
                 "innings_1_team": "Seattle Orcas",
                 "innings_2_team": "MI New York",
                 "venue": mlc_venue
-                # Other columns will be NaN or default
             }
 
     batting_team = st.selectbox("Batting Team", sorted(df_filtered["innings_1_team"].dropna().astype(str).unique()))
@@ -196,7 +183,6 @@ if st.button("🚀 Predict Now"):
         st.warning(f"📦 Predicted Boundary Bucket: {bucket_label}")
         st.success(f"✅ Win Probability (Batting Team): {win_prob:.2f}%")
 
-        # === Save Prediction History ===
         if st.button("💾 Save Prediction"):
             prediction_data = {
                 "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
