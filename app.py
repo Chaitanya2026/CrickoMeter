@@ -3,6 +3,7 @@ import pandas as pd
 import joblib
 import plotly.express as px
 from datetime import datetime
+import numpy as np
 
 # === Page Config ===
 st.set_page_config(page_title="CrickoMeter", page_icon="🏏", layout="wide")
@@ -32,13 +33,6 @@ st.markdown("""
             border-radius: 8px;
             padding: 10px 20px;
             font-weight: bold;
-        }
-        .element-container {
-            margin-top: 30px;
-        }
-        .stAlert {
-            border-radius: 10px;
-            padding: 10px;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -120,7 +114,7 @@ venue_map = {
     "Warner Park, Basseterre, St Kitts": "Warner Park, St Kitts",
     "Warner Park, Basseterre": "Warner Park, St Kitts",
     "Windsor Park, Roseau": "Windsor Park, Roseau, Dominica",
-    "Central Broward Regional Park Stadium Turf Ground": "Central Broward Regional Park Stadium"
+    "Central Broward Regional Park Stadium": "Central Broward Regional Park Stadium Turf Ground"
 }
 df['venue'] = df['venue'].replace(venue_map)
 
@@ -133,7 +127,6 @@ df = df[~df['innings_2_team'].isin(old_teams)]
 # === Sidebar Inputs ===
 with st.sidebar:
     st.header("🔍 Match Setup")
-
     match_type = st.selectbox("Match Type", sorted(df["match_type"].dropna().astype(str).unique()))
     df_filtered = df[df["match_type"] == match_type].copy()
 
@@ -148,10 +141,9 @@ with st.sidebar:
                 "venue": mlc_venue
             }
 
-    batting_team = st.selectbox("Batting Team", sorted(df_filtered["innings_1_team"].dropna().astype(str).unique()))
-    bowling_team = st.selectbox("Bowling Team", sorted(df_filtered["innings_2_team"].dropna().astype(str).unique()))
-    venue = st.selectbox("Venue", sorted(df_filtered["venue"].dropna().astype(str).unique()))
-
+    batting_team = st.selectbox("Batting Team", sorted(df_filtered["innings_1_team"].dropna().unique()))
+    bowling_team = st.selectbox("Bowling Team", sorted(df_filtered["innings_2_team"].dropna().unique()))
+    venue = st.selectbox("Venue", sorted(df_filtered["venue"].dropna().unique()))
     powerplay_runs = st.number_input("Powerplay Runs (6 overs)", min_value=0, max_value=100, step=1)
     powerplay_wkts = st.number_input("Powerplay Wickets Fallen", min_value=0, max_value=6, step=1)
 
@@ -159,21 +151,26 @@ with st.sidebar:
 st.subheader(f"📊 Venue Stats: {venue}")
 venue_df = df[df["venue"] == venue]
 
+avg_score = venue_df["innings_1_runs"].mean()
+avg_boundaries = venue_df["innings_1_boundaries"].mean()
+boundary_std = venue_df["innings_1_boundaries"].std()
+
 col1, col2, col3 = st.columns(3)
-col1.metric("Avg 1st Inns Score", int(venue_df["innings_1_runs"].mean()))
-col2.metric("Avg. 1st Inns Boundaries", round(venue_df["innings_1_boundaries"].mean(), 1))
-col3.metric("Boundary Std Dev", round(venue_df["innings_1_boundaries"].std(), 1))
+col1.metric("Avg 1st Inns Score", int(avg_score) if not np.isnan(avg_score) else "N/A")
+col2.metric("Avg 1st Inns Boundaries", round(avg_boundaries, 1) if not np.isnan(avg_boundaries) else "N/A")
+col3.metric("Boundary Std Dev", round(boundary_std, 1) if not np.isnan(boundary_std) else "N/A")
 
 # === Line Chart ===
 st.markdown("### 📈 Avg First Innings Runs per Over at Venue")
 avg_runs_per_over = [venue_df.get(f"innings_1_over_{i}_runs", pd.Series([0])).mean() for i in range(1, 21)]
-fig_line = px.line(x=list(range(1, 21)), y=avg_runs_per_over, labels={'x': 'Over', 'y': 'Avg Runs'}, title="Avg First Innings Runs per Over")
+fig_line = px.line(x=list(range(1, 21)), y=avg_runs_per_over,
+                   labels={'x': 'Over', 'y': 'Avg Runs'}, title="Avg First Innings Runs per Over")
 st.plotly_chart(fig_line, use_container_width=True)
 
 # === Pie Chart ===
 st.markdown("### 🥧 Boundary Ranges at This Venue")
 bucket_ranges = {"<25": 0, "25-40": 0, "41-55": 0, "55+": 0}
-for val in venue_df["match_total_boundaries"]:
+for val in venue_df["match_total_boundaries"].dropna():
     if val < 25:
         bucket_ranges["<25"] += 1
     elif val <= 40:
