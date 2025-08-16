@@ -41,15 +41,15 @@ st.markdown("""
 st.markdown("<h1>🏏 CrickoMeter: Predict & Analyze Cricket Matches</h1>", unsafe_allow_html=True)
 
 # === Load Models ===
-score_model = joblib.load("models/score_model_1.pkl")
-boundary_model = joblib.load("models/boundary_model_1.pkl")
-bucket_model = joblib.load("models/bucket_model_1.pkl")
-bucket_label_encoder = joblib.load("models/bucket_label_encoder_1.pkl")
-win_model = joblib.load("models/win_model_1.pkl")
-win_model_scaler = joblib.load("models/win_model_scaler_1.pkl")
+score_model = joblib.load("models/score_model_all.pkl")
+boundary_model = joblib.load("models/boundary_model_all.pkl")
+bucket_model = joblib.load("models/bucket_model_all.pkl")
+bucket_label_encoder = joblib.load("models/bucket_label_encoder_all.pkl")
+win_model = joblib.load("models/win_model_all.pkl")
+win_model_scaler = joblib.load("models/win_model_scaler_all.pkl")
 
 # === Load Data ===
-df = pd.read_csv("combined_3_dropdowns.csv")
+df = pd.read_csv("combined_all_20_over_matches.csv")
 
 # === Venue Fixes ===
 venue_map = {
@@ -224,7 +224,11 @@ if st.button("🚀 Predict Now"):
             'net_team_rating': sample_row.get("batting_team_rating", pd.Series([50])).values[0] - sample_row.get("bowling_team_rating", pd.Series([50])).values[0],
             'innings_1_powerplay_loss_rate': powerplay_wkts / 6,
             'net_run_rate_pp': powerplay_runs - sample_row["venue_avg_pp"].values[0],
-            'collapse_flag': 1 if powerplay_wkts >= 3 else 0
+            'collapse_flag': 1 if powerplay_wkts >= 3 else 0,
+            'last_5_middle_rr_team': sample_row.get("last_5_middle_rr_team", pd.Series([7.0])).values[0],
+            'last_5_death_rr_team': sample_row.get("last_5_death_rr_team", pd.Series([8.0])).values[0],
+            'venue_last_5_middle_rr': sample_row.get("venue_last_5_middle_rr", pd.Series([7.0])).values[0],
+            'venue_last_5_death_rr': sample_row.get("venue_last_5_death_rr", pd.Series([8.0])).values[0]
         }])
 
         predicted_score = int(score_model.predict(input_df)[0])
